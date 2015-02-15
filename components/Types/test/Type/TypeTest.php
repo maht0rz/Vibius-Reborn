@@ -31,6 +31,17 @@ class TypeTest extends PHPUnit_Framework_TestCase{
 		];
 	}
 
+	public function preparedInstanceProvider(){
+		/*
+			I was unable to pass result of testSetRulesMethodShouldSetRulesProperty
+			to current test method via @depends, so here's a quick&dirty workaround
+		*/
+		return call_user_func_array(
+			[$this,'testSetRulesMethodShouldSetRulesProperty'],
+			 $this->groupedProvider()[0]
+		);
+	}
+
 	/**
      * @dataProvider rulesPropertyReflectionProvider
      */
@@ -51,9 +62,10 @@ class TypeTest extends PHPUnit_Framework_TestCase{
 	 * @dataProvider groupedProvider
 	 */
 	public function testSetRulesMethodShouldSetRulesProperty(
-		ReflectionProperty $rulesProperty, ReflectionMethod $setRulesMethod)
-	{	
+		ReflectionProperty $rulesProperty, ReflectionMethod $setRulesMethod, $stub = false
+	){	
 		$typeRulesInstance = new Vibius\Types\Type\TypeRules();
+		if($stub) $typeRulesInstance = $stub;
 		$setRulesMethod->setAccessible(true);
 		$setRulesMethod->invoke($this->instance, $typeRulesInstance);
 
@@ -63,17 +75,32 @@ class TypeTest extends PHPUnit_Framework_TestCase{
 
 		return $this->instance;
 	}
-	
+
+	/**
+	 * @depends testSetRulesMethodShouldSetRulesProperty
+	 */
 	public function testShouldValidateGivenRulesForType(){
-		/*
-			I was unable to pass result of testSetRulesMethodShouldSetRulesProperty
-			to current test method via @depends, so here's a quick&dirty workaround
-		*/
-		$preparedInstance = call_user_func_array(
-			[$this,'testSetRulesMethodShouldSetRulesProperty'],
-			 $this->groupedProvider()[0]
-		);
+		$preparedInstance = $this->preparedInstanceProvider();
 
 		$this->assertTrue($preparedInstance->isValid());
+	}
+
+	/**
+	 * @depends testSetRulesMethodShouldSetRulesProperty
+	 * @dataProvider groupedProvider
+	 */
+	public function testShouldValidateGivenRulesForTypeWithUnmatchedRule(
+		ReflectionProperty $rulesProperty, ReflectionMethod $setRulesMethod
+	){
+		$stub = $this->getMockBuilder('Vibius\Types\Type\TypeRules')
+					 ->getMock();
+		$stub->method('validate')
+			 ->willReturn(false);
+
+		$preparedInstance = $this->testSetRulesMethodShouldSetRulesProperty(
+			$rulesProperty, $setRulesMethod, $stub
+		);
+
+		$this->assertFalse($preparedInstance->isValid());
 	}
 }
