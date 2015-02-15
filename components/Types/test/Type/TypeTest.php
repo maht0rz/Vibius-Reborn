@@ -63,11 +63,7 @@ class TypeTest extends PHPUnit_Framework_TestCase{
 
 		return $this->instance;
 	}
-
-	public function testArr(){
-		return [1,2,3,4,5];
-	}
-
+	
 	public function testShouldValidateGivenRulesForType(){
 		/*
 			I was unable to pass result of testSetRulesMethodShouldSetRulesProperty
