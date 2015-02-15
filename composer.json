@@ -1,0 +1,9 @@
+{	
+	"name": "Vibius",
+	"author": "maht0rz",
+	"autoload": {
+		"psr-4": {
+			"Vibius\\Types\\": "./components/Types/src"
+		}
+	}
+}
